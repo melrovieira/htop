@@ -859,6 +859,13 @@ static bool Process_matchesFilter(const Process* this, const Table* table) {
    assert(Object_isA((const Object*) pt, (const ObjectClass*) &ProcessTable_class));
    if (pt->pidMatchList && !Hashtable_get(pt->pidMatchList, Process_getThreadGroup(this)))
       return true;
+   const char* stateFilter = host->settings->stateFilter;
+   if (stateFilter) {
+    char stateChar = processStateChar(this->state);
+    if (stateChar != stateFilter[0]) {
+        return true;
+    }
+}
 
    return false;
 }
