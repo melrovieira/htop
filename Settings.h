@@ -110,6 +110,7 @@ typedef struct Settings_ {
    bool topologyAffinity;
    #endif
 
+   char* stateFilter;
    bool changed;
    uint64_t lastUpdate;
 } Settings;
