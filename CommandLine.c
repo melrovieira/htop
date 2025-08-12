@@ -78,6 +78,7 @@ static void printHelpFlag(const char* name) {
 typedef struct CommandLineSettings_ {
    Hashtable* pidMatchList;
    char* commFilter;
+   char* stateFilter;
    uid_t userId;
    int sortKey;
    int delay;
@@ -98,6 +99,7 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
    *flags = (CommandLineSettings) {
       .pidMatchList = NULL,
       .commFilter = NULL,
+      .stateFilter = NULL,
       .userId = (uid_t)-1, // -1 is guaranteed to be an invalid uid_t (see setreuid(2))
       .sortKey = 0,
       .delay = -1,
@@ -128,6 +130,7 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
       {"tree",       no_argument,         0, 't'},
       {"pid",        required_argument,   0, 'p'},
       {"filter",     required_argument,   0, 'F'},
+      {"state",      required_argument,   0, 'S'},
       {"highlight-changes", optional_argument, 0, 'H'},
       {"readonly",   no_argument,         0, 128},
       PLATFORM_LONG_OPTIONS
@@ -254,6 +257,14 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
                return STATUS_ERROR_EXIT;
             }
             free_and_xStrdup(&flags->commFilter, optarg);
+            break;
+         case 'S':
+            assert(optarg);
+            if (optarg[0] == '\0' || optarg[1] != '\0' || !strchr("URQWDBPTtZXIS", optarg[0])) {
+               fprintf(stderr, "Error: invalid state filter value \"%s\".\n", optarg);
+               return STATUS_ERROR_EXIT;
+            }
+            free_and_xStrdup(&flags->stateFilter, optarg);
             break;
          case 'H': {
             const char* delay = optarg;
@@ -382,6 +393,9 @@ int CommandLine_run(int argc, char** argv) {
       .hideSelection = false,
       .hideMeters = false,
    };
+   if (flags.stateFilter) {
+      free_and_xStrdup(&settings->stateFilter, flags.stateFilter);
+}
 
    MainPanel_setState(panel, &state);
    if (flags.commFilter)
