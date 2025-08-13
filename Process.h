@@ -55,6 +55,9 @@ typedef enum ProcessState_ {
    SLEEPING
 } ProcessState;
 
+
+char processStateChar(ProcessState state);
+
 struct Machine_;  // IWYU pragma: keep
 struct Settings_; // IWYU pragma: keep
 

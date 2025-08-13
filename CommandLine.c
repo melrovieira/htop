@@ -259,13 +259,33 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
             free_and_xStrdup(&flags->commFilter, optarg);
             break;
          case 'S':
-            assert(optarg);
-            if (optarg[0] == '\0' || optarg[1] != '\0' || !strchr("URQWDBPTtZXIS", optarg[0])) {
-               fprintf(stderr, "Error: invalid state filter value \"%s\".\n", optarg);
-               return STATUS_ERROR_EXIT;
+    assert(optarg);
+    if (optarg[0] == '\0') {
+        fprintf(stderr, "Error: state filter cannot be empty.\n");
+        return STATUS_ERROR_EXIT;
+    }
+
+    // Para cada caractere passado no optarg, verificar se ele corresponde a algum estado válido
+    for (char *c = optarg; *c != '\0'; c++) {
+        int valid = 0;
+
+        // Testa todos os enums do ProcessState
+        for (ProcessState s = UNKNOWN; s <= SLEEPING; s++) {
+            if (*c == processStateChar(s)) {
+                valid = 1;  // encontrou
+                break;
             }
-            free_and_xStrdup(&flags->stateFilter, optarg);
-            break;
+        }
+
+        if (!valid) {
+            fprintf(stderr, "Error: invalid state filter value \"%s\".\n", optarg);
+            return STATUS_ERROR_EXIT;
+        }
+    }
+
+    free_and_xStrdup(&flags->stateFilter, optarg);
+    break;
+
          case 'H': {
             const char* delay = optarg;
             if (!delay && optind < argc && argv[optind] != NULL &&
