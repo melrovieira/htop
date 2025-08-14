@@ -859,16 +859,16 @@ static bool Process_matchesFilter(const Process* this, const Table* table) {
    assert(Object_isA((const Object*) pt, (const ObjectClass*) &ProcessTable_class));
    if (pt->pidMatchList && !Hashtable_get(pt->pidMatchList, Process_getThreadGroup(this)))
       return true;
-const char* stateFilter = host->settings->stateFilter;
+const char* stateFilter = host->settings->stateFilter;// stateFilter arguments passed by user
 if (stateFilter) {
-    char stateChar = processStateChar(this->state);
-    if (!strchr(stateFilter, stateChar)) {
-        return true;
+    char stateChar = processStateChar(this->state); //stateChar of current process
+    if (!strchr(stateFilter, stateChar)) { //checks if stateChar exists in stateFilter arguments
+        return true; //if stateChar don't exists in string, return true, this hide the process that is not in stateFilter arguments
     }
 }
 
 
-   return false;
+   return false; //if stateChar exists in string, return false, for the process that user passed by in stateFilter arguments to appear
 }
 
 bool Process_rowMatchesFilter(const Row* super, const Table* table) {

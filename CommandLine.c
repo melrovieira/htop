@@ -54,6 +54,7 @@ static void printHelpFlag(const char* name) {
           "-C --no-color                   Use a monochrome color scheme\n"
           "-d --delay=DELAY                Set the delay between updates, in tenths of seconds\n"
           "-F --filter=FILTER              Show only the commands matching the given filter\n"
+          "-S --state=STATESCHARS          Show only the states matching the given states\n"
           "-h --help                       Print this help screen\n"
           "-H --highlight-changes[=DELAY]  Highlight new and old processes\n", name);
 #ifdef HAVE_GETMOUSE
@@ -139,7 +140,7 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
 
    int opt, opti = 0;
    /* Parse arguments */
-   while ((opt = getopt_long(argc, argv, "hVMCs:td:n:u::Up:F:H::", long_opts, &opti))) {
+   while ((opt = getopt_long(argc, argv, "hVMCs:td:n:u::Up:F:H::S:", long_opts, &opti))) {
       if (opt == EOF)
          break;
 
@@ -258,25 +259,32 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
             }
             free_and_xStrdup(&flags->commFilter, optarg);
             break;
-         case 'S':
+
+case 'S':
+    //ensures that optarg is not NULL
     assert(optarg);
+
+    // check if the argument is empty
     if (optarg[0] == '\0') {
         fprintf(stderr, "Error: state filter cannot be empty.\n");
         return STATUS_ERROR_EXIT;
     }
 
-    // Para cada caractere passado no optarg, verificar se ele corresponde a algum estado válido
+      // for each character in optarg:
+      //   - check if it corresponds to a valid ProcessState enum value
+      //   - if any character is invalid, print an error and exit
     for (char *c = optarg; *c != '\0'; c++) {
         int valid = 0;
 
-        // Testa todos os enums do ProcessState
+        // test all ProcessState enum values
         for (ProcessState s = UNKNOWN; s <= SLEEPING; s++) {
             if (*c == processStateChar(s)) {
-                valid = 1;  // encontrou
+                valid = 1;  // character is valid
                 break;
             }
         }
 
+        // if character is invalid, report error and exit
         if (!valid) {
             fprintf(stderr, "Error: invalid state filter value \"%s\".\n", optarg);
             return STATUS_ERROR_EXIT;
@@ -285,6 +293,7 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
 
     free_and_xStrdup(&flags->stateFilter, optarg);
     break;
+
 
          case 'H': {
             const char* delay = optarg;
